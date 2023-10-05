@@ -1,20 +1,24 @@
 /*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2023 gucchisk
 */
 package cmd
 
 import (
 	"fmt"
 	"net/http"
-	// "io"
 	"strings"
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"golang.org/x/mod/semver"
 	"github.com/spf13/cobra"
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+var log logr.Logger
 
 // var htmltxt = strings.NewReader(`
 // <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -49,7 +53,17 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("arg:" + args[0])
+		level, _ := cmd.Flags().GetInt("log")
+		var config zap.Config
+		if level == 0 {
+			config = zap.NewProductionConfig()
+		} else {
+			config = zap.NewDevelopmentConfig()
+			config.Level = zap.NewAtomicLevelAt(zapcore.Level(-level))
+		}
+		z, _ := config.Build()
+		log = zapr.NewLogger(z)
+		log.V(1).Info("", "arg", args[0])
 		resp, err := http.Get(args[0])
 		if err != nil {
 			fmt.Printf("error: %x\n", err)
@@ -60,41 +74,65 @@ to quickly create a Cobra application.`,
 		// 	fmt.Printf("error: %x\n", err)
 		// }
 		// fmt.Println(string(b))
-		
+		iv, _ := cmd.Flags().GetString("version")
 		node, err := html.Parse(resp.Body)
 		if err != nil {
 			fmt.Printf("error: %x\n", err)
 		}
-		//fmt.Printf("%x\n", node)
 		nodes := findAll(node, atom.Img)
-
+		var latest string = "v0.0.0"
 		for i := 1; i < len(nodes); i++ {
 			n := nodes[i]
-		// for _, n := range nodes {
-			fmt.Printf("atom: %s\n", n.DataAtom.String())
+			log.V(2).Info("", "atom", n.DataAtom.String())
 			a := n.NextSibling.NextSibling
-			if a != nil && a.DataAtom == atom.A {
-				href, err := GetAttr(a, "href")
-				if err != nil {
-					fmt.Printf("%s", err)
-				} else {
-					version := strings.TrimRight(href, "/")
-					if IsSemver(version) {
-						fmt.Printf("version: %s\n", version)
+			if a == nil || a.DataAtom != atom.A {
+				continue
+			}
+			href, err := GetAttr(a, "href")
+			if err != nil {
+				fmt.Printf("%s", err)
+				continue
+			}
+			version := ToSemver(strings.TrimRight(href, "/"))
+			compareFunc := func(v string) {
+				if IsSemver(version) {
+					log.V(1).Info("", "version", v);
+					if semver.Compare(v, latest) == 1 {
+						latest = v
 					}
-					
 				}
 			}
+			if iv != "" {
+				if strings.HasPrefix(version, ToSemver(iv)) {
+					compareFunc(version)
+				}
+			} else {
+				compareFunc(version)
+			}
 		}
+		fmt.Printf("%s", FromSemver(latest))
 	},
 }
 
 func IsSemver(version string) bool {
+	v := ToSemver(version)
+	return semver.IsValid(v)
+}
+
+func ToSemver(version string) string {
 	v := version
 	if !strings.HasPrefix(v, "v") {
 		v = "v" + v
 	}
-	return semver.IsValid(v)
+	return v
+}
+
+func FromSemver(version string) string {
+	v := version
+	if strings.HasPrefix(v, "v") {
+		v = v[1:len(v)]
+	}
+	return v
 }
 
 func GetAttr(node *html.Node, attr string) (string, error) {
@@ -158,4 +196,6 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// apacheCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	apacheCmd.Flags().StringP("version", "v", "", "version to get")
+	apacheCmd.Flags().Int("log", 0, "log level")
 }

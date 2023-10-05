@@ -6,6 +6,7 @@ package main
 
 import "github.com/gucchisk/getversions/cmd"
 
+
 func main() {
 	cmd.Execute()
 }
