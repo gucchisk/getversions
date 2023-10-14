@@ -1,8 +1,10 @@
 version: '3'
+vars:
+  binary: getversions
 tasks:
   build:
     cmds:
-      - go build -o getversions main.go
+      - go build -o {{.binary}}  main.go
   clean:
     cmds:
-      - rm getversions
+      - rm -f {{.binary}}
