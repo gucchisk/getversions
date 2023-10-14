@@ -5,6 +5,9 @@ tasks:
   build:
     cmds:
       - go build -o {{.binary}}  main.go
+  test:
+    cmds:
+      - go test ./...
   clean:
     cmds:
       - rm -f {{.binary}}
