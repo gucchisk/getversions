@@ -10,12 +10,12 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-	"golang.org/x/mod/semver"
 	"github.com/spf13/cobra"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"github.com/gucchisk/getversions/utils"
 )
 
 var log logr.Logger
@@ -93,46 +93,23 @@ to quickly create a Cobra application.`,
 				fmt.Printf("%s", err)
 				continue
 			}
-			version := ToSemver(strings.TrimRight(href, "/"))
+			version := utils.ToSemver(strings.TrimRight(href, "/"))
 			compareFunc := func(v string) {
-				if IsSemver(version) {
-					log.V(1).Info("", "version", v);
-					if semver.Compare(v, latest) == 1 {
-						latest = v
-					}
+				log.V(1).Info("", "version", v);
+				if utils.IsBig(v, latest) {
+					latest = v
 				}
 			}
 			if iv != "" {
-				if strings.HasPrefix(version, ToSemver(iv)) {
+				if strings.HasPrefix(version, utils.ToSemver(iv)) {
 					compareFunc(version)
 				}
 			} else {
 				compareFunc(version)
 			}
 		}
-		fmt.Printf("%s", FromSemver(latest))
+		fmt.Printf("%s", utils.FromSemver(latest))
 	},
-}
-
-func IsSemver(version string) bool {
-	v := ToSemver(version)
-	return semver.IsValid(v)
-}
-
-func ToSemver(version string) string {
-	v := version
-	if !strings.HasPrefix(v, "v") {
-		v = "v" + v
-	}
-	return v
-}
-
-func FromSemver(version string) string {
-	v := version
-	if strings.HasPrefix(v, "v") {
-		v = v[1:len(v)]
-	}
-	return v
 }
 
 func GetAttr(node *html.Node, attr string) (string, error) {
