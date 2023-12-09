@@ -2,6 +2,7 @@ package utils
 
 import (
 	"strings"
+
 	"golang.org/x/mod/semver"
 )
 

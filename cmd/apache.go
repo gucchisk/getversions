@@ -79,40 +79,119 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			fmt.Printf("error: %x\n", err)
 		}
-		nodes := findAll(node, atom.Img)
-		var latest string = "v0.0.0"
-		for i := 1; i < len(nodes); i++ {
-			n := nodes[i]
-			log.V(2).Info("", "atom", n.DataAtom.String())
-			a := n.NextSibling.NextSibling
-			if a == nil || a.DataAtom != atom.A {
-				continue
-			}
-			href, err := GetAttr(a, "href")
-			if err != nil {
-				fmt.Printf("%s", err)
-				continue
-			}
-			version := utils.ToSemver(strings.TrimRight(href, "/"))
-			compareFunc := func(v string) {
-				log.V(1).Info("", "version", v);
-				if utils.IsBig(v, latest) {
-					latest = v
-				}
-			}
-			if iv != "" {
-				if strings.HasPrefix(version, utils.ToSemver(iv)) {
-					compareFunc(version)
-				}
-			} else {
-				compareFunc(version)
-			}
+
+		var latest string
+		log.V(2).Info("", "Server", resp.Header.Get("Server"))
+		if resp.Header.Get("Server") == "cloudflare" {
+			log.V(2).Info("", "cloudflare", true)
+			latest = getLatestSemverCloudflare(node, iv)
+		} else{
+			latest = getLatestSemverApache(node, iv)
 		}
+		
+		// tag := atom.Tr
+		// nodes := findAll(node, tag)
+		// var latest string = "v0.0.0"
+		// for i := 1; i < len(nodes); i++ {
+		// 	n := nodes[i]
+		// 	log.V(2).Info("", "atom", n.DataAtom.String())
+		// 	log.V(2).Info("", "child atom", n.FirstChild.DataAtom.String())
+		// 	next := n.NextSibling
+		// 	if next == nil {
+		// 		continue
+		// 	}
+		// 	a := next.NextSibling
+		// 	if a == nil || a.DataAtom != atom.A {
+		// 		continue
+		// 	}
+		// 	href, err := getAttr(a, "href")
+		// 	if err != nil {
+		// 		fmt.Printf("%s", err)
+		// 		continue
+		// 	}
+		// 	version := utils.ToSemver(strings.TrimRight(href, "/"))
+		// 	compareFunc := func(v string) {
+		// 		log.V(1).Info("", "version", v);
+		// 		if utils.IsBig(v, latest) {
+		// 			latest = v
+		// 		}
+		// 	}
+		// 	if iv != "" {
+		// 		if strings.HasPrefix(version, utils.ToSemver(iv)) {
+		// 			compareFunc(version)
+		// 		}
+		// 	} else {
+		// 		compareFunc(version)
+		// 	}
+		// }
 		fmt.Printf("%s", utils.FromSemver(latest))
 	},
 }
 
-func GetAttr(node *html.Node, attr string) (string, error) {
+func getLatestSemverApache(body *html.Node, versionCondition string) string {
+	nodes := findAll(body, atom.Img)
+	log.V(2).Info("", "len", len(nodes))
+	var latest string = "v0.0.0"
+	for i := 1; i < len(nodes); i++ {
+		n := nodes[i]
+		log.V(2).Info("", "atom", n.DataAtom.String())
+		a := n.NextSibling.NextSibling
+		if a == nil || a.DataAtom != atom.A {
+			continue
+		}
+		href, err := getAttr(a, "href")
+		if err != nil {
+			fmt.Printf("%s", err)
+			continue
+		}
+		version := utils.ToSemver(strings.TrimRight(href, "/"))
+		compareFunc := func(v string) {
+			log.V(1).Info("", "version", v);
+			if utils.IsBig(v, latest) {
+				latest = v
+			}
+		}
+		if versionCondition != "" {
+			if strings.HasPrefix(version, utils.ToSemver(versionCondition)) {
+				compareFunc(version)
+			}
+		} else {
+			compareFunc(version)
+		}
+	}
+	return latest
+}
+
+func getLatestSemverCloudflare(body *html.Node, versionCondition string) string {
+	nodes := findAll(body, atom.Tr)
+	var latest string = "v0.0.0"
+	for i := 1; i < len(nodes); i++ {
+		n := nodes[i]
+		a := n.FirstChild.FirstChild
+		if a == nil || a.DataAtom != atom.A {
+			continue
+		}
+		text := a.FirstChild.Data
+		log.V(2).Info("", "text", text)
+		version := utils.ToSemver(strings.TrimRight(text, "/"))
+		compareFunc := func(v string) {
+			log.V(1).Info("", "version", v);
+			if utils.IsBig(v, latest) {
+				latest = v
+			}
+		}
+		if versionCondition != "" {
+			if strings.HasPrefix(version, utils.ToSemver(versionCondition)) {
+				compareFunc(version)
+			}
+		} else {
+			compareFunc(version)
+		}		
+	}
+	return latest
+}
+
+func getAttr(node *html.Node, attr string) (string, error) {
 	for _, a := range node.Attr {
 		if a.Key == attr {
 			return a.Val, nil
@@ -133,6 +212,7 @@ func findFirst(node *html.Node, a atom.Atom) *html.Node {
 func findAll(node *html.Node, a atom.Atom) []*html.Node {
 	var nodes []*html.Node
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		// log.V(2).Info("", "type", c.Type)
 		if c.Type == html.ElementNode {
 			if c.DataAtom == a {
 				nodes = append(nodes, c)
@@ -163,7 +243,6 @@ func findAll(node *html.Node, a atom.Atom) []*html.Node {
 
 func init() {
 	rootCmd.AddCommand(apacheCmd)
-
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
