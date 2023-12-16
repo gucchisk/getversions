@@ -8,17 +8,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gucchisk/getversions/utils"
+	"github.com/spf13/cobra"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-	"github.com/spf13/cobra"
-	"github.com/go-logr/logr"
-	"github.com/go-logr/zapr"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"github.com/gucchisk/getversions/utils"
 )
 
-var log logr.Logger
+// var log logr.Logger
 
 // var htmltxt = strings.NewReader(`
 // <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -53,27 +49,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		level, _ := cmd.Flags().GetInt("log")
-		var config zap.Config
-		if level == 0 {
-			config = zap.NewProductionConfig()
-		} else {
-			config = zap.NewDevelopmentConfig()
-			config.Level = zap.NewAtomicLevelAt(zapcore.Level(-level))
-		}
-		z, _ := config.Build()
-		log = zapr.NewLogger(z)
-		log.V(1).Info("", "arg", args[0])
+		logger.V(1).Info("", "arg", args[0])
 		resp, err := http.Get(args[0])
 		if err != nil {
 			fmt.Printf("error: %x\n", err)
 		}
 		defer resp.Body.Close()
-		// b, err := io.ReadAll(resp.Body)
-		// if err != nil {
-		// 	fmt.Printf("error: %x\n", err)
-		// }
-		// fmt.Println(string(b))
 		iv, _ := cmd.Flags().GetString("version")
 		node, err := html.Parse(resp.Body)
 		if err != nil {
@@ -81,60 +62,25 @@ to quickly create a Cobra application.`,
 		}
 
 		var latest string
-		log.V(2).Info("", "Server", resp.Header.Get("Server"))
+		logger.V(2).Info("", "Server", resp.Header.Get("Server"))
 		if resp.Header.Get("Server") == "cloudflare" {
-			log.V(2).Info("", "cloudflare", true)
+			logger.V(2).Info("", "cloudflare", true)
 			latest = getLatestSemverCloudflare(node, iv)
-		} else{
+		} else {
+			logger.V(2).Info("", "apache", true)
 			latest = getLatestSemverApache(node, iv)
 		}
-		
-		// tag := atom.Tr
-		// nodes := findAll(node, tag)
-		// var latest string = "v0.0.0"
-		// for i := 1; i < len(nodes); i++ {
-		// 	n := nodes[i]
-		// 	log.V(2).Info("", "atom", n.DataAtom.String())
-		// 	log.V(2).Info("", "child atom", n.FirstChild.DataAtom.String())
-		// 	next := n.NextSibling
-		// 	if next == nil {
-		// 		continue
-		// 	}
-		// 	a := next.NextSibling
-		// 	if a == nil || a.DataAtom != atom.A {
-		// 		continue
-		// 	}
-		// 	href, err := getAttr(a, "href")
-		// 	if err != nil {
-		// 		fmt.Printf("%s", err)
-		// 		continue
-		// 	}
-		// 	version := utils.ToSemver(strings.TrimRight(href, "/"))
-		// 	compareFunc := func(v string) {
-		// 		log.V(1).Info("", "version", v);
-		// 		if utils.IsBig(v, latest) {
-		// 			latest = v
-		// 		}
-		// 	}
-		// 	if iv != "" {
-		// 		if strings.HasPrefix(version, utils.ToSemver(iv)) {
-		// 			compareFunc(version)
-		// 		}
-		// 	} else {
-		// 		compareFunc(version)
-		// 	}
-		// }
 		fmt.Printf("%s", utils.FromSemver(latest))
 	},
 }
 
 func getLatestSemverApache(body *html.Node, versionCondition string) string {
 	nodes := findAll(body, atom.Img)
-	log.V(2).Info("", "len", len(nodes))
+	logger.V(2).Info("", "len", len(nodes))
 	var latest string = "v0.0.0"
 	for i := 1; i < len(nodes); i++ {
 		n := nodes[i]
-		log.V(2).Info("", "atom", n.DataAtom.String())
+		logger.V(2).Info("", "atom", n.DataAtom.String())
 		a := n.NextSibling.NextSibling
 		if a == nil || a.DataAtom != atom.A {
 			continue
@@ -146,7 +92,7 @@ func getLatestSemverApache(body *html.Node, versionCondition string) string {
 		}
 		version := utils.ToSemver(strings.TrimRight(href, "/"))
 		compareFunc := func(v string) {
-			log.V(1).Info("", "version", v);
+			logger.V(1).Info("", "version", v)
 			if utils.IsBig(v, latest) {
 				latest = v
 			}
@@ -163,19 +109,19 @@ func getLatestSemverApache(body *html.Node, versionCondition string) string {
 }
 
 func getLatestSemverCloudflare(body *html.Node, versionCondition string) string {
-	nodes := findAll(body, atom.Tr)
+	nodes := findAll(body, atom.A)
+	logger.V(2).Info("", "len", len(nodes))
 	var latest string = "v0.0.0"
 	for i := 1; i < len(nodes); i++ {
-		n := nodes[i]
-		a := n.FirstChild.FirstChild
+		a := nodes[i]
 		if a == nil || a.DataAtom != atom.A {
 			continue
 		}
 		text := a.FirstChild.Data
-		log.V(2).Info("", "text", text)
+		logger.V(2).Info("", "text", text)
 		version := utils.ToSemver(strings.TrimRight(text, "/"))
 		compareFunc := func(v string) {
-			log.V(1).Info("", "version", v);
+			logger.V(1).Info("", "version", v)
 			if utils.IsBig(v, latest) {
 				latest = v
 			}
@@ -186,7 +132,7 @@ func getLatestSemverCloudflare(body *html.Node, versionCondition string) string 
 			}
 		} else {
 			compareFunc(version)
-		}		
+		}
 	}
 	return latest
 }
@@ -212,7 +158,7 @@ func findFirst(node *html.Node, a atom.Atom) *html.Node {
 func findAll(node *html.Node, a atom.Atom) []*html.Node {
 	var nodes []*html.Node
 	for c := node.FirstChild; c != nil; c = c.NextSibling {
-		// log.V(2).Info("", "type", c.Type)
+		// logger.V(2).Info("", "type", c.Type)
 		if c.Type == html.ElementNode {
 			if c.DataAtom == a {
 				nodes = append(nodes, c)
@@ -253,5 +199,5 @@ func init() {
 	// is called directly, e.g.:
 	// apacheCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	apacheCmd.Flags().StringP("version", "v", "", "version to get")
-	apacheCmd.Flags().Int("log", 0, "log level")
+	// apacheCmd.Flags().Int("log", 0, "log level")
 }
