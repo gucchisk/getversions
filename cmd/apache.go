@@ -6,12 +6,11 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
+	"github.com/gucchisk/getversions/pkg/latest"
+	"github.com/gucchisk/getversions/pkg/latest/apache"
 	"github.com/gucchisk/getversions/utils"
 	"github.com/spf13/cobra"
-	"golang.org/x/net/html"
-	"golang.org/x/net/html/atom"
 )
 
 // var log logr.Logger
@@ -56,136 +55,29 @@ to quickly create a Cobra application.`,
 		}
 		defer resp.Body.Close()
 		iv, _ := cmd.Flags().GetString("version")
-		node, err := html.Parse(resp.Body)
-		if err != nil {
-			fmt.Printf("error: %x\n", err)
-		}
+		// node, err := html.Parse(resp.Body)
+		// if err != nil {
+		// 	fmt.Printf("error: %x\n", err)
+		// }
 
+		var getter latest.Getter
 		var latest string
+
 		logger.V(2).Info("", "Server", resp.Header.Get("Server"))
 		if resp.Header.Get("Server") == "cloudflare" {
 			logger.V(2).Info("", "cloudflare", true)
-			latest = getLatestSemverCloudflare(node, iv)
+			getter = apache.NewCloudflareWithLogger(logger)
 		} else {
 			logger.V(2).Info("", "apache", true)
-			latest = getLatestSemverApache(node, iv)
+			getter = apache.NewApacheWithLogger(logger)
+		}
+		latest, err = getter.GetLatestVersion(resp.Body, iv)
+		if err != nil {
+			fmt.Printf("error: %x\n", err)
 		}
 		fmt.Printf("%s", utils.FromSemver(latest))
 	},
 }
-
-func getLatestSemverApache(body *html.Node, versionCondition string) string {
-	nodes := findAll(body, atom.Img)
-	logger.V(2).Info("", "len", len(nodes))
-	var latest string = "v0.0.0"
-	for i := 1; i < len(nodes); i++ {
-		n := nodes[i]
-		logger.V(2).Info("", "atom", n.DataAtom.String())
-		a := n.NextSibling.NextSibling
-		if a == nil || a.DataAtom != atom.A {
-			continue
-		}
-		href, err := getAttr(a, "href")
-		if err != nil {
-			fmt.Printf("%s", err)
-			continue
-		}
-		version := utils.ToSemver(strings.TrimRight(href, "/"))
-		compareFunc := func(v string) {
-			logger.V(1).Info("", "version", v)
-			if utils.IsBig(v, latest) {
-				latest = v
-			}
-		}
-		if versionCondition != "" {
-			if strings.HasPrefix(version, utils.ToSemver(versionCondition)) {
-				compareFunc(version)
-			}
-		} else {
-			compareFunc(version)
-		}
-	}
-	return latest
-}
-
-func getLatestSemverCloudflare(body *html.Node, versionCondition string) string {
-	nodes := findAll(body, atom.A)
-	logger.V(2).Info("", "len", len(nodes))
-	var latest string = "v0.0.0"
-	for i := 1; i < len(nodes); i++ {
-		a := nodes[i]
-		if a == nil || a.DataAtom != atom.A {
-			continue
-		}
-		text := a.FirstChild.Data
-		logger.V(2).Info("", "text", text)
-		version := utils.ToSemver(strings.TrimRight(text, "/"))
-		compareFunc := func(v string) {
-			logger.V(1).Info("", "version", v)
-			if utils.IsBig(v, latest) {
-				latest = v
-			}
-		}
-		if versionCondition != "" {
-			if strings.HasPrefix(version, utils.ToSemver(versionCondition)) {
-				compareFunc(version)
-			}
-		} else {
-			compareFunc(version)
-		}
-	}
-	return latest
-}
-
-func getAttr(node *html.Node, attr string) (string, error) {
-	for _, a := range node.Attr {
-		if a.Key == attr {
-			return a.Val, nil
-		}
-	}
-	return "", fmt.Errorf("%s is not found", attr)
-}
-
-func findFirst(node *html.Node, a atom.Atom) *html.Node {
-	for c := node.FirstChild; c != nil; c = c.NextSibling {
-		if c.Type == html.ElementNode && c.DataAtom == a {
-			return c
-		}
-	}
-	return nil
-}
-
-func findAll(node *html.Node, a atom.Atom) []*html.Node {
-	var nodes []*html.Node
-	for c := node.FirstChild; c != nil; c = c.NextSibling {
-		// logger.V(2).Info("", "type", c.Type)
-		if c.Type == html.ElementNode {
-			if c.DataAtom == a {
-				nodes = append(nodes, c)
-			}
-			child_nodes := findAll(c, a)
-			nodes = append(nodes, child_nodes...)
-		}
-	}
-	return nodes
-}
-
-// func find(node *html.Node, a atom.Atom) {
-// 	for c := node.FirstChild; c != nil; c = c.NextSibling {
-// 		// fmt.Printf("%d\n", c.Type)
-// 		if c.Type == html.ElementNode {
-// 			fmt.Printf("node: %s parent: %s\n", c.DataAtom.String(), c.Parent.DataAtom.String())
-// 			if c.DataAtom == a {
-// 				fmt.Printf("%v\n", c.Data)
-// 				if c.NextSibling.NextSibling != nil {
-// 					fmt.Printf("next:%s\n", c.NextSibling.NextSibling.DataAtom.String())
-// 				}
-// 				// find(c, atom.A)
-// 			}
-// 			find(c, a)
-// 		}
-// 	}
-// }
 
 func init() {
 	rootCmd.AddCommand(apacheCmd)
