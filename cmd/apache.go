@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gucchisk/getversions/pkg/latest/apache"
-	"github.com/gucchisk/getversions/utils"
+	"github.com/gucchisk/getversions/pkg/utils/version"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +60,7 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			fmt.Printf("error: %x\n", err)
 		}
-		fmt.Printf("%s", utils.FromSemver(latest))
+		fmt.Printf("%s", version.FromSemver(latest))
 	},
 }
 
