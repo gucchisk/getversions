@@ -1,5 +1,7 @@
 package apache_test
 
+// This test requires network connection
+
 import (
 	"bytes"
 	"io"
@@ -10,7 +12,7 @@ import (
 	"github.com/gucchisk/getversions/pkg/latest/apache"
 )
 
-func TestGetLatestVersionForApache(t *testing.T) {
+func TestGetLatestVersionForMaven(t *testing.T) {
 	url := "https://archive.apache.org/dist/maven/maven-3/"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -40,7 +42,7 @@ func TestGetLatestVersionForApache(t *testing.T) {
 	}
 }
 
-func TestGetLatestVersionForCloudflare(t *testing.T) {
+func TestGetLatestVersionForNodejs(t *testing.T) {
 	url := "https://nodejs.org/download/release/"
 	resp, err := http.Get(url)
 	if err != nil {
@@ -50,7 +52,7 @@ func TestGetLatestVersionForCloudflare(t *testing.T) {
 	writer := bytes.NewBuffer(nil)
 
 	// 17 -> 17.9.1
-	v, err := apache.NewCloudflare().GetLatestVersion(io.TeeReader(resp.Body, writer), "17")
+	v, err := apache.NewApache().GetLatestVersion(io.TeeReader(resp.Body, writer), "17")
 	if err != nil {
 		t.Errorf("%s", err)
 	}
@@ -60,7 +62,7 @@ func TestGetLatestVersionForCloudflare(t *testing.T) {
 	}
 
 	// 17.7 -> 17.7.2
-	v, err = apache.NewCloudflare().GetLatestVersion(strings.NewReader(writer.String()), "17.7")
+	v, err = apache.NewApache().GetLatestVersion(strings.NewReader(writer.String()), "17.7")
 	if err != nil {
 		t.Errorf("%s", err)
 	}
@@ -68,4 +70,55 @@ func TestGetLatestVersionForCloudflare(t *testing.T) {
 	if v != expected {
 		t.Errorf("v = %s (expect: %s)", v, expected)
 	}
+}
+
+func TestGetLatestVersionForGradle(t *testing.T) {
+	url := "https://services.gradle.org/distributions/"
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	defer resp.Body.Close()
+	writer := bytes.NewBuffer(nil)
+
+	// 8 -> 8.6
+	v, err := apache.NewApache().GetLatestVersion(io.TeeReader(resp.Body, writer), "8")
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	expected := "v8.6"
+	if v != expected {
+		t.Errorf("v = %s (expect: %s)", v, expected)
+	}
+
+	// 8.2 -> 8.2.1
+	v, err = apache.NewApache().GetLatestVersion(strings.NewReader(writer.String()), "8.2")
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	expected = "v8.2.1"
+	if v != expected {
+		t.Errorf("v = %s (expect: %s)", v, expected)
+	}
+
+	// 7 -> 7.6.3
+	v, err = apache.NewApache().GetLatestVersion(strings.NewReader(writer.String()), "7")
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	expected = "v7.6.3"
+	if v != expected {
+		t.Errorf("v = %s (expect: %s)", v, expected)
+	}
+
+	// 8.5 -> 8.5
+	v, err = apache.NewApache().GetLatestVersion(strings.NewReader(writer.String()), "8.5")
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	expected = "v8.5"
+	if v != expected {
+		t.Errorf("v = %s (expect: %s)", v, expected)
+	}
+
 }

@@ -28,24 +28,29 @@ func (a *Apache) GetLatestVersion(reader io.Reader, versionCondition string) (st
 	if err != nil {
 		return "", err
 	}
-	nodes := htmlparser.FindAll(node, atom.Img)
+	nodes := htmlparser.FindAll(node, atom.A)
 	a.logger.V(2).Info("", "len", len(nodes))
 	latest := "v0.0.0"
 	for i := 1; i < len(nodes); i++ {
-		n := nodes[i]
-		a.logger.V(2).Info("", "atom", n.DataAtom.String())
-		a := n.NextSibling.NextSibling
-		if a == nil || a.DataAtom != atom.A {
+		anchor := nodes[i]
+		if a == nil || anchor.DataAtom != atom.A {
 			continue
 		}
-		href, err := htmlparser.GetAttr(a, "href")
-		if err != nil {
-			// fmt.Printf("%s", err)
-			continue
+		textNodes := htmlparser.FindAllTexts(anchor)
+		a.logger.V(2).Info("", "textNodes", len(textNodes))
+		var version string
+		for _, textNode := range textNodes {
+			v, _ := utils.SearchVersion(textNode.Data)
+			a.logger.V(2).Info("", "text", textNode.Data)
+			if v != "" {
+				a.logger.V(2).Info("", "version", v)
+				version = utils.ToSemver(v)
+				break
+			}
 		}
-		version := utils.ToSemver(strings.TrimRight(href, "/"))
+		a.logger.V(2).Info("", "v", version)
 		compareFunc := func(v string) {
-			//logger.V(1).Info("", "version", v)
+			a.logger.V(1).Info("", "version", v)
 			if utils.IsBig(v, latest) {
 				latest = v
 			}

@@ -39,3 +39,16 @@ func FindAll(node *html.Node, a atom.Atom) []*html.Node {
 	}
 	return nodes
 }
+
+func FindAllTexts(node *html.Node) []*html.Node {
+	var nodes []*html.Node
+	for c := node.FirstChild; c != nil; c = c.NextSibling {
+		// logger.V(2).Info("", "type", c.Type)
+		if c.Type == html.TextNode && c.Data != "\n" {
+			nodes = append(nodes, c)
+		}
+		child_nodes := FindAllTexts(c)
+		nodes = append(nodes, child_nodes...)
+	}
+	return nodes
+}

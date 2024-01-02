@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gucchisk/getversions/pkg/latest"
 	"github.com/gucchisk/getversions/pkg/latest/apache"
 	"github.com/gucchisk/getversions/utils"
 	"github.com/spf13/cobra"
@@ -55,23 +54,9 @@ to quickly create a Cobra application.`,
 		}
 		defer resp.Body.Close()
 		iv, _ := cmd.Flags().GetString("version")
-		// node, err := html.Parse(resp.Body)
-		// if err != nil {
-		// 	fmt.Printf("error: %x\n", err)
-		// }
-
-		var getter latest.Getter
-		var latest string
-
 		logger.V(2).Info("", "Server", resp.Header.Get("Server"))
-		if resp.Header.Get("Server") == "cloudflare" {
-			logger.V(2).Info("", "cloudflare", true)
-			getter = apache.NewCloudflareWithLogger(logger)
-		} else {
-			logger.V(2).Info("", "apache", true)
-			getter = apache.NewApacheWithLogger(logger)
-		}
-		latest, err = getter.GetLatestVersion(resp.Body, iv)
+		getter := apache.NewApacheWithLogger(logger)
+		latest, err := getter.GetLatestVersion(resp.Body, iv)
 		if err != nil {
 			fmt.Printf("error: %x\n", err)
 		}
