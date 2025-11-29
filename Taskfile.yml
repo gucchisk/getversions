@@ -4,7 +4,18 @@ vars:
 tasks:
   build:
     cmds:
-      - go build -o {{.binary}}  main.go
+      - go build -o {{.binary}} main.go
+    sources:
+      - main.go
+    generates:
+      - ./{{.binary}}
+  build-gradle:
+    cmds:
+      - go build -o {{.binary}}-gradle actions/gradle/main.go
+    sources:
+      - actions/gradle/main.go
+    generate:
+      - ./{{.binary}}-gradle
   test:
     cmds:
       - go test ./...
