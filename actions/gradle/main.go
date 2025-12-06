@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gucchisk/getversions/pkg/action"
 	"github.com/hashicorp/go-plugin"
+	"github.com/spf13/pflag"
 )
 
 type GradleAction struct {
@@ -24,8 +24,11 @@ func (g *GradleAction) Long() string {
 	return "Gradle release versions"
 }
 
-func (g *GradleAction) GetVersions(reader io.Reader) []string {
-	fmt.Println("Fetching Gradle versions...")
+func (g *GradleAction) FlagSet() pflag.FlagSet {
+	return pflag.FlagSet{}
+}
+
+func (g *GradleAction) GetVersions(reader io.Reader, flags pflag.FlagSet) []string {
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
 		return []string{}
@@ -46,7 +49,6 @@ var handShakeConfig = plugin.HandshakeConfig{
 }
 
 func main() {
-	// fmt.Println("Starting Gradle GetVersions plugin...")
 	var pluginMap = map[string]plugin.Plugin{
 		"gradle": &action.GetVersionsPlugin{Impl: &GradleAction{}},
 	}
