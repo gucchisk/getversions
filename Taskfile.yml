@@ -15,7 +15,7 @@ tasks:
     sources:
       - actions/gradle/main.go
     generates:
-      - ./{{.banary}}-gradle
+      - ./{{.binary}}-gradle
   test:
     cmds:
       - go test ./...
