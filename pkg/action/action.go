@@ -6,19 +6,21 @@ import (
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/spf13/pflag"
 )
 
 type GetVersionsAction interface {
 	Short() string
 	Long() string
-	GetVersions(reader io.Reader) []string
+	GetVersions(reader io.Reader, flags pflag.FlagSet) []string
 }
 
 type GetVersionsPluginAction interface {
 	Version() string
 	Short() string
 	Long() string
-	GetVersions(reader io.Reader) []string
+	FlagSet() pflag.FlagSet
+	GetVersions(reader io.Reader, flags pflag.FlagSet) []string
 }
 
 type GetVersionsPluginActionRPC struct {
@@ -52,13 +54,31 @@ func (g *GetVersionsPluginActionRPC) Long() string {
 	return resp
 }
 
-func (g *GetVersionsPluginActionRPC) GetVersions(reader io.Reader) []string {
+func (g *GetVersionsPluginActionRPC) FlagSet() pflag.FlagSet {
+	var resp pflag.FlagSet
+	err := g.client.Call("Plugin.FlagSet", struct{}{}, &resp)
+	if err != nil {
+		panic(err)
+	}
+	return resp
+}
+
+type GetVersionsArgs struct {
+	Data  []byte
+	Flags pflag.FlagSet
+}
+
+func (g *GetVersionsPluginActionRPC) GetVersions(reader io.Reader, flags pflag.FlagSet) []string {
 	var resp []string
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		panic(err)
 	}
-	err = g.client.Call("Plugin.GetVersions", data, &resp)
+	args := GetVersionsArgs{
+		Data:  data,
+		Flags: flags,
+	}
+	err = g.client.Call("Plugin.GetVersions", args, &resp)
 	if err != nil {
 		panic(err)
 	}
@@ -84,9 +104,10 @@ func (s *Plugin) Long(args struct{}, resp *string) error {
 	return nil
 }
 
-func (s *Plugin) GetVersions(data []byte, resp *[]string) error {
+func (s *Plugin) GetVersions(args GetVersionsArgs, resp *[]string) error {
+	data := args.Data
 	reader := bytes.NewReader(data)
-	*resp = s.Impl.GetVersions(reader)
+	*resp = s.Impl.GetVersions(reader, args.Flags)
 	return nil
 }
 

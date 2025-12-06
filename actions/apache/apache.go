@@ -5,6 +5,7 @@ import (
 
 	"github.com/gucchisk/getversions/pkg/utils/htmlparser"
 	"github.com/gucchisk/getversions/pkg/utils/version"
+	"github.com/spf13/pflag"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -20,7 +21,7 @@ func (a *ApacheAction) Long() string {
 	return "apache command extract the version from a list of downloadable versions displayed using Apache AutoIndex, like the one at https://archive.apache.org/dist/maven/maven-3/."
 }
 
-func (a *ApacheAction) GetVersions(reader io.Reader) []string {
+func (a *ApacheAction) GetVersions(reader io.Reader, flags pflag.FlagSet) []string {
 	node, err := html.Parse(reader)
 	if err != nil {
 		panic(err)

@@ -145,7 +145,7 @@ func createActionCmd(name string, a act.GetVersionsAction) *cobra.Command {
 			// buf := new(bytes.Buffer)
 			// io.Copy(buf, resp.Body)
 			// body := buf.Bytes()
-			verList := a.GetVersions(resp.Body)
+			verList := a.GetVersions(resp.Body, *cmd.Flags())
 			onlyLatest, err := cmd.Flags().GetBool("latest")
 			if err != nil {
 				return err
