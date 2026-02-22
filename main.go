@@ -12,10 +12,30 @@ import (
 
 func main() {
 	var logLevel int
-	tmpFlags := pflag.NewFlagSet("tmp", pflag.ContinueOnError)
-	tmpFlags.ParseErrorsWhitelist.UnknownFlags = true
-	tmpFlags.IntVar(&logLevel, "log", 0, "set log level (0=warn, 1=info, 2=debug)")
-	tmpFlags.Parse(os.Args[1:])
+	if containsHelpFlag(os.Args[1:]) {
+		exec(0)
+		return
+	}
+
+	logFlags := pflag.NewFlagSet("log", pflag.ContinueOnError)
+	logFlags.ParseErrorsWhitelist.UnknownFlags = true
+	logFlags.IntVar(&logLevel, "log", 0, "set log level (0=warn, 1=info, 2=debug)")
+	logFlags.Parse(os.Args[1:])
+	exec(logLevel)
+	// cmd.CreateRootCmd(logLevel)
+	// cmd.Execute(logLevel)
+}
+
+func exec(logLevel int) {
 	cmd.CreateRootCmd(logLevel)
 	cmd.Execute(logLevel)
+}
+
+func containsHelpFlag(args []string) bool {
+	for _, arg := range args {
+		if arg == "--help" || arg == "-h" {
+			return true
+		}
+	}
+	return false
 }
