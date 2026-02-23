@@ -70,9 +70,9 @@ reviews:
       essential_rules: true
       packages: []
     shellcheck:
-      enabled: true
+      enabled: false
     ruff:
-      enabled: true
+      enabled: false
     markdownlint:
       enabled: true
     github-checks:
@@ -87,18 +87,18 @@ reviews:
       enabled_only: false
       level: default
     biome:
-      enabled: true
+      enabled: false
     hadolint:
-      enabled: true
+      enabled: false
     swiftlint:
-      enabled: true
+      enabled: false
     phpstan:
-      enabled: true
+      enabled: false
       level: default
     phpmd:
-      enabled: true
+      enabled: false
     phpcs:
-      enabled: true
+      enabled: false
     golangci-lint:
       enabled: true
     yamllint:
@@ -108,69 +108,69 @@ reviews:
     trufflehog:
       enabled: true
     checkov:
-      enabled: true
+      enabled: false
     tflint:
-      enabled: true
+      enabled: false
     detekt:
-      enabled: true
+      enabled: false
     eslint:
-      enabled: true
+      enabled: false
     flake8:
-      enabled: true
+      enabled: false
     fortitudeLint:
-      enabled: true
+      enabled: false
     rubocop:
-      enabled: true
+      enabled: false
     buf:
-      enabled: true
+      enabled: false
     regal:
-      enabled: true
+      enabled: false
     actionlint:
       enabled: true
     pmd:
-      enabled: true
+      enabled: false
     clang:
-      enabled: true
+      enabled: false
     cppcheck:
-      enabled: true
+      enabled: false
     opengrep:
       enabled: true
     semgrep:
       enabled: true
     circleci:
-      enabled: true
+      enabled: false
     clippy:
-      enabled: true
+      enabled: false
     sqlfluff:
-      enabled: true
+      enabled: false
     trivy:
       enabled: true
     prismaLint:
-      enabled: true
+      enabled: false
     pylint:
-      enabled: true
+      enabled: false
     oxc:
-      enabled: true
+      enabled: false
     shopifyThemeCheck:
-      enabled: true
+      enabled: false
     luacheck:
-      enabled: true
+      enabled: false
     brakeman:
-      enabled: true
+      enabled: false
     dotenvLint:
       enabled: true
     htmlhint:
-      enabled: true
+      enabled: false
     stylelint:
-      enabled: true
+      enabled: false
     checkmake:
-      enabled: true
+      enabled: false
     osvScanner:
       enabled: true
     blinter:
-      enabled: true
+      enabled: false
     psscriptanalyzer:
-      enabled: true
+      enabled: false
 chat:
   art: true
   auto_reply: true
