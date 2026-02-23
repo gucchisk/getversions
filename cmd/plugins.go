@@ -24,9 +24,7 @@ var pluginsCmd = &cobra.Command{
 
   Example output:
     gradle: Extract versions from Gradle projects
-    maven: Extract versions from Maven repositories
-
-  These would replace the current placeholder text in cmd/plugins.go:15-21 to provide users with clear, helpful information when they run getversions plugins --help.`,
+    maven: Extract versions from Maven repositories`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, a := range actions {
 			logger.V(2).Info("plugin found", "name", a.Name)
