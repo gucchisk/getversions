@@ -30,10 +30,11 @@ var pluginsCmd = &cobra.Command{
 			logger.V(2).Info("plugin found", "name", a.Name)
 			action, err := getGetVersionAction(a)
 			if err != nil {
-				continue
+				fmt.Printf("%s: error loading plugin - %s\n", a.Name, err.Error())
+			} else {
+				logger.V(2).Info("plugin", "action", action)
+				fmt.Printf("%s@%s: %s\n", a.Name, action.Version(), action.Short())
 			}
-			logger.V(2).Info("plugin", "action", action)
-			fmt.Printf("%s@%s: %s\n", a.Name, action.Version(), action.Short())
 		}
 	},
 }
