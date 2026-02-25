@@ -106,13 +106,13 @@ var testdata = []struct {
 func TestFilter(t *testing.T) {
 	for _, td := range testdata {
 		name := fmt.Sprintf("TestFilter: %s", td.name)
-		assert.Equal(t, vers.NewVersions(td.versions).Filter(td.condition).Get(), td.expected, name)
+		assert.Equal(t, td.expected, vers.NewVersions(td.versions).Filter(td.condition).Get(), name)
 	}
 }
 
 func TestLatest(t *testing.T) {
 	for _, td := range testdata {
 		name := fmt.Sprintf("TestFilter: %s", td.name)
-		assert.Equal(t, vers.NewVersions(td.versions).Filter(td.condition).OnlyLatest().Get(), td.expectedLatest, name)
+		assert.Equal(t, td.expectedLatest, vers.NewVersions(td.versions).Filter(td.condition).OnlyLatest().Get(), name)
 	}
 }
