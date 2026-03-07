@@ -110,9 +110,9 @@ func TestFilter(t *testing.T) {
 	}
 }
 
-func TestLatest(t *testing.T) {
+func TestFilterOnlyLatest(t *testing.T) {
 	for _, td := range testdata {
-		name := fmt.Sprintf("TestFilter: %s", td.name)
+		name := fmt.Sprintf("TestFilterOnlyLatest: %s", td.name)
 		assert.Equal(t, td.expectedLatest, vers.NewVersions(td.versions).Filter(td.condition).OnlyLatest().Get(), name)
 	}
 }
