@@ -61,7 +61,7 @@ func CreateRootCmd(level int) {
 	addCommands()
 
 	// hclog for go-plugin
-	var output io.Writer = os.Stdout
+	var output io.Writer = os.Stderr
 	if level == 0 {
 		output = io.Discard
 	}
