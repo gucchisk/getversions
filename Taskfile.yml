@@ -7,6 +7,12 @@ tasks:
       - go build -o {{.binary}} main.go
     sources:
       - main.go
+      - cmd/*.go
+      - pkg/action/*.go
+      - pkg/utils/*.go
+      - pkg/utils/htmlparser/*.go
+      - pkg/utils/version/*.go
+      - pkg/versions/*.go
     generates:
       - ./{{.binary}}
   build-gradle:

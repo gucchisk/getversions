@@ -12,22 +12,29 @@ import (
 // pluginsCmd represents the plugins command
 var pluginsCmd = &cobra.Command{
 	Use:   "plugins",
-	Short: "plugins command for getversions",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "list all installed plugins",
+	Long: `List all installed getversions plugins and their descriptions.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+  This command scans $GOPATH/bin for plugin binaries matching the pattern
+  'getversions-*' and displays each plugin's name and short description.
+
+  Plugins extend getversions functionality by adding support for additional
+  version extraction sources. Each plugin registers as a subcommand that can
+  be invoked directly.
+
+  Example output:
+    gradle: Extract versions from Gradle projects
+    maven: Extract versions from Maven repositories`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, a := range actions {
 			logger.V(2).Info("plugin found", "name", a.Name)
 			action, err := getGetVersionAction(a)
 			if err != nil {
-				continue
+				fmt.Printf("%s: error loading plugin - %s\n", a.Name, err.Error())
+			} else {
+				logger.V(2).Info("plugin", "action", action)
+				fmt.Printf("%s@%s: %s\n", a.Name, action.Version(), action.Short())
 			}
-			logger.V(2).Info("plugin", "action", action)
-			fmt.Printf("%s: %s\n", a.Name, action.Short())
 		}
 	},
 }
