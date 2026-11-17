@@ -14,18 +14,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
+    - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.25'
-
+        go-version: '1.27'
     - name: Set up Task
       run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b /usr/local/bin
-
     - name: Build
       run: task build
-
     - name: Test
-      run: task test
+      run: task test-with-coverage
+    - name: Coverage summary
+      run: |
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+        go tool cover -func=coverage.out >> "$GITHUB_STEP_SUMMARY"
+        echo '```' >> "$GITHUB_STEP_SUMMARY"
+    - name: Coverage
+      run: task coverage-report
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: coverage.html
