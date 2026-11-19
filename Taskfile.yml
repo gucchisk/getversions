@@ -19,6 +19,12 @@ tasks:
   test:
     cmds:
       - go test ./...
+  test-with-coverage:
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+  coverage-report:
+    cmds:
+      - go tool cover -html=coverage.out -o coverage.html
   clean:
     cmds:
       - rm -f {{.binary}}
