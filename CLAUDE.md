@@ -44,13 +44,22 @@ go test ./pkg/latest/apache
 - `actions/*/main.go` - プラグインの実装
 - `cmd/root.go` - プラグインの検出とコマンド登録
 
-**プラグインインターフェース (`GetVersionsAction`):**
+**プラグインインターフェース (`pluginapi`):**
 ```go
+// ホスト側でコマンド生成に使用するインターフェース
 type GetVersionsAction interface {
+    Short() string
+    Long() string
+    GetVersions(reader io.Reader, flags pflag.FlagSet) []string
+}
+
+// プラグインが実装するインターフェース（GetVersionsAction に Version と FlagSet を追加したもの）
+type GetVersionsPluginAction interface {
     Version() string
     Short() string
     Long() string
-    GetVersions(reader io.Reader) []string
+    FlagSet() pflag.FlagSet
+    GetVersions(reader io.Reader, flags pflag.FlagSet) []string
 }
 ```
 
@@ -61,7 +70,7 @@ type GetVersionsAction interface {
 4. ハンドシェイク設定: `pluginapi.HandshakeConfig`（`GETVERSIONS_PLUGIN="hello"`、プロトコルバージョン1）をホストとプラグインで共有
 
 **新しいプラグインの作成:**
-1. `GetVersionsAction`インターフェースを実装した`actions/<name>/main.go`を作成
+1. `pluginapi.GetVersionsPluginAction`インターフェース（`Version`/`Short`/`Long`/`FlagSet`/`GetVersions`）を実装した`actions/<name>/main.go`を作成し、`main()`で`pluginapi.GetVersionsPlugin{Impl: ...}`を`plugin.Serve`に`pluginapi.HandshakeConfig`とともに登録する（実装例: `actions/gradle/main.go`）
 2. ビルド: `go build -o getversions-<name> actions/<name>/main.go`
 3. インストール: バイナリを`$GOPATH/bin/`に配置
 4. プラグインは自動的にサブコマンドとして登録される
