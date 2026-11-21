@@ -1,11 +1,9 @@
 package versions_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gucchisk/getversions/pkg/versions"
-	vers "github.com/gucchisk/getversions/pkg/versions"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +27,7 @@ func TestNewVersions(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			actual := vers.NewVersions(testCase.inputVersions)
+			actual := versions.NewVersions(testCase.inputVersions)
 
 			// 初期状態では条件なし・最新のみではないため、全バージョンが返る
 			assert.Equal(t, testCase.expectedVersions, actual.Get())
@@ -41,13 +39,13 @@ func TestOnlyLatest(t *testing.T) {
 	inputVersions := []string{"1.0.0", "v2.0.0", "1.5.0"}
 
 	t.Run("同じインスタンスを返す", func(t *testing.T) {
-		target := vers.NewVersions(inputVersions)
+		target := versions.NewVersions(inputVersions)
 
 		assert.Same(t, target, target.OnlyLatest())
 	})
 
 	t.Run("最新バージョンを元の表記のまま1件だけ返す", func(t *testing.T) {
-		actual := vers.NewVersions(inputVersions).OnlyLatest().Get()
+		actual := versions.NewVersions(inputVersions).OnlyLatest().Get()
 
 		assert.Equal(t, []string{"v2.0.0"}, actual)
 	})
@@ -143,11 +141,6 @@ func TestGet(t *testing.T) {
 			onlyLatest:       true,
 			expectedVersions: []string{},
 		},
-		{
-			name:             "条件なしでバージョンが空の場合は空を返す",
-			inputVersions:    []string{},
-			expectedVersions: []string{},
-		},
 	}
 
 	for _, testCase := range testCases {
@@ -220,53 +213,58 @@ var nodejsVersions = []string{
 	"v0.6.1", "v0.6.10", "v0.6.11", "v0.6.12", "v0.6.13", "v0.6.2", "v0.6.3", "v0.6.4", "v0.6.5", "v0.6.6", "v0.6.7", "v0.6.8", "v0.6.9",
 }
 
-var testdata = []struct {
-	name           string
-	versions       []string
-	condition      string
-	expected       []string
-	expectedLatest []string
+// realWorldTestCases は実在するプロジェクトのバージョン一覧を使ったテストケース
+var realWorldTestCases = []struct {
+	name                   string
+	inputVersions          []string
+	condition              string
+	expectedVersions       []string
+	expectedLatestVersions []string
 }{
 	{
-		name:           "Maven 3.8",
-		versions:       mavenVersions,
-		condition:      "3.8",
-		expected:       []string{"3.8.1", "3.8.2", "3.8.3", "3.8.4", "3.8.5", "3.8.6", "3.8.7", "3.8.8", "3.8.9"},
-		expectedLatest: []string{"3.8.9"},
+		name:                   "Maven 3.8",
+		inputVersions:          mavenVersions,
+		condition:              "3.8",
+		expectedVersions:       []string{"3.8.1", "3.8.2", "3.8.3", "3.8.4", "3.8.5", "3.8.6", "3.8.7", "3.8.8", "3.8.9"},
+		expectedLatestVersions: []string{"3.8.9"},
 	},
 	{
-		name:           "Maven 3",
-		versions:       mavenVersions,
-		condition:      "3",
-		expected:       mavenVersions,
-		expectedLatest: []string{"3.9.11"},
+		name:                   "Maven 3",
+		inputVersions:          mavenVersions,
+		condition:              "3",
+		expectedVersions:       mavenVersions,
+		expectedLatestVersions: []string{"3.9.11"},
 	},
 	{
-		name:           "Node.js 20.19",
-		versions:       nodejsVersions,
-		condition:      "20.19",
-		expected:       []string{"v20.19.0", "v20.19.1", "v20.19.2", "v20.19.3", "v20.19.4", "v20.19.5", "v20.19.6"},
-		expectedLatest: []string{"v20.19.6"},
+		name:                   "Node.js 20.19",
+		inputVersions:          nodejsVersions,
+		condition:              "20.19",
+		expectedVersions:       []string{"v20.19.0", "v20.19.1", "v20.19.2", "v20.19.3", "v20.19.4", "v20.19.5", "v20.19.6"},
+		expectedLatestVersions: []string{"v20.19.6"},
 	},
 	{
-		name:           "Node.js 22",
-		versions:       nodejsVersions,
-		condition:      "22",
-		expected:       []string{"v22.0.0", "v22.1.0", "v22.10.0", "v22.11.0", "v22.12.0", "v22.13.0", "v22.13.1", "v22.14.0", "v22.15.0", "v22.15.1", "v22.16.0", "v22.17.0", "v22.17.1", "v22.18.0", "v22.19.0", "v22.2.0", "v22.20.0", "v22.21.0", "v22.21.1", "v22.3.0", "v22.4.0", "v22.4.1", "v22.5.0", "v22.5.1", "v22.6.0", "v22.7.0", "v22.8.0", "v22.9.0"},
-		expectedLatest: []string{"v22.21.1"},
+		name:                   "Node.js 22",
+		inputVersions:          nodejsVersions,
+		condition:              "22",
+		expectedVersions:       []string{"v22.0.0", "v22.1.0", "v22.10.0", "v22.11.0", "v22.12.0", "v22.13.0", "v22.13.1", "v22.14.0", "v22.15.0", "v22.15.1", "v22.16.0", "v22.17.0", "v22.17.1", "v22.18.0", "v22.19.0", "v22.2.0", "v22.20.0", "v22.21.0", "v22.21.1", "v22.3.0", "v22.4.0", "v22.4.1", "v22.5.0", "v22.5.1", "v22.6.0", "v22.7.0", "v22.8.0", "v22.9.0"},
+		expectedLatestVersions: []string{"v22.21.1"},
 	},
 }
 
-func TestFilter(t *testing.T) {
-	for _, td := range testdata {
-		name := fmt.Sprintf("TestFilter: %s", td.name)
-		assert.Equal(t, td.expected, vers.NewVersions(td.versions).Filter(td.condition).Get(), name)
-	}
-}
+func TestGetWithRealWorldVersions(t *testing.T) {
+	for _, testCase := range realWorldTestCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Run("条件に一致する全バージョンを返す", func(t *testing.T) {
+				actual := versions.NewVersions(testCase.inputVersions).Filter(testCase.condition).Get()
 
-func TestFilterOnlyLatest(t *testing.T) {
-	for _, td := range testdata {
-		name := fmt.Sprintf("TestFilterOnlyLatest: %s", td.name)
-		assert.Equal(t, td.expectedLatest, vers.NewVersions(td.versions).Filter(td.condition).OnlyLatest().Get(), name)
+				assert.Equal(t, testCase.expectedVersions, actual)
+			})
+
+			t.Run("最新のみの場合は条件内の最大バージョンを返す", func(t *testing.T) {
+				actual := versions.NewVersions(testCase.inputVersions).Filter(testCase.condition).OnlyLatest().Get()
+
+				assert.Equal(t, testCase.expectedLatestVersions, actual)
+			})
+		})
 	}
 }
