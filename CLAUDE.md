@@ -40,7 +40,7 @@ go test ./pkg/latest/apache
 このアプリケーションは、RPCベースのプラグイン用にHashiCorp's go-pluginフレームワークを使用しています：
 
 **主要コンポーネント:**
-- `pkg/action/action.go` - プラグインインターフェースとRPCレイヤーを定義
+- `pluginapi/pluginapi.go` - プラグインインターフェース・RPCレイヤー・ハンドシェイク設定を定義（独立モジュール `github.com/gucchisk/getversions/pluginapi`。本体からは `go.mod` の `replace` で参照）
 - `actions/*/main.go` - プラグインの実装
 - `cmd/root.go` - プラグインの検出とコマンド登録
 
@@ -58,7 +58,7 @@ type GetVersionsAction interface {
 1. プラグインは`$GOPATH/bin`で`getversions-`で始まるバイナリを検索して発見される
 2. プラグインコマンドは実行時に`addPluginCommands()`を介して動的に登録される
 3. RPC通信: `io.Reader`はシリアライゼーションのために`[]byte`に変換する必要がある（インターフェースをRPC経由で直接渡すことはできない）
-4. ハンドシェイク設定: `GETVERSIONS_PLUGIN="hello"`、プロトコルバージョン1を使用
+4. ハンドシェイク設定: `pluginapi.HandshakeConfig`（`GETVERSIONS_PLUGIN="hello"`、プロトコルバージョン1）をホストとプラグインで共有
 
 **新しいプラグインの作成:**
 1. `GetVersionsAction`インターフェースを実装した`actions/<name>/main.go`を作成

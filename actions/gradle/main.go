@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/gucchisk/getversions/pkg/action"
+	"github.com/gucchisk/getversions/pluginapi"
 	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/pflag"
 )
@@ -42,18 +42,12 @@ func (g *GradleAction) GetVersions(reader io.Reader, flags pflag.FlagSet) []stri
 	return versions
 }
 
-var handShakeConfig = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   "GETVERSIONS_PLUGIN",
-	MagicCookieValue: "hello",
-}
-
 func main() {
 	var pluginMap = map[string]plugin.Plugin{
-		"gradle": &action.GetVersionsPlugin{Impl: &GradleAction{}},
+		"gradle": &pluginapi.GetVersionsPlugin{Impl: &GradleAction{}},
 	}
 	plugin.Serve(&plugin.ServeConfig{
-		HandshakeConfig: handShakeConfig,
+		HandshakeConfig: pluginapi.HandshakeConfig,
 		Plugins:         pluginMap,
 	})
 }
