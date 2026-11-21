@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -44,13 +45,9 @@ func CreateRootCmd(level int) {
 	rootCmd = &cobra.Command{
 		Use:   "getversions",
 		Short: "root command for getversions",
-		Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+		Long:  `getversions is a command-line tool that extracts version information from various software project websites. It's designed to help users quickly find the latest available versions of software packages.`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			logger.V(2).Info("pre root called")
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logger.V(2).Info("root called")
@@ -60,11 +57,17 @@ to quickly create a Cobra application.`,
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Flags().BoolP("plugin", "p", false, "List plugins")
 	rootCmd.PersistentFlags().Int("log", 0, "log level")
+	rootCmd.PersistentFlags().MarkHidden("log")
 	addCommands()
 
+	// hclog for go-plugin
+	var output io.Writer = os.Stderr
+	if level == 0 {
+		output = io.Discard
+	}
 	hcLogger = hclog.New(&hclog.LoggerOptions{
 		Name:   "plugin",
-		Output: os.Stdout,
+		Output: output,
 		// hclog.Warn = 4
 		Level: hclog.Level(4 - level),
 	})
@@ -74,7 +77,10 @@ to quickly create a Cobra application.`,
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(level int) {
+	logger.V(2).Info("execute called", "level", level)
+
 	err := rootCmd.Execute()
+	logger.V(2).Info("execute finished", "error", err)
 
 	defer func() {
 		for _, a := range actions {
@@ -124,7 +130,7 @@ func addPluginCommands(hcLogger hclog.Logger) {
 		actions = append(actions, a)
 		command, err := createPluginActionCmd(a)
 		if err != nil {
-			logger.Error(err, "create plugin command error", "plugin", name)
+			fmt.Printf("plugin error - %s: %s\n", name, err.Error())
 			continue
 		}
 		rootCmd.AddCommand(command)
@@ -176,16 +182,19 @@ func createPluginActionCmd(a PluginAction) (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger.V(2).Info("plugin action obtained", "name", a.Name)
 	return createActionCmd(a.Name, action), nil
 }
 
 func getGetVersionAction(a PluginAction) (action.GetVersionsPluginAction, error) {
 	rpcClient, err := a.Client.Client()
 	if err != nil {
-		logger.Error(err, "Client error")
-		fmt.Printf("error: %x\n", err)
+		logger.V(2).Info("Client error", "error", err)
+		// logger.Error(err, "Client error")
+		// fmt.Printf("error: %x\n", err)
 		return nil, err
 	}
+	logger.V(2).Info("Client created")
 	raw, err := rpcClient.Dispense(a.Name)
 	if err != nil {
 		logger.Error(err, "Dispence error")
