@@ -45,17 +45,14 @@ var pluginsCmd = &cobra.Command{
 	},
 }
 
-// fetchPluginSummary は プラグインのバージョンと短い説明を取得する。
-// RPCクライアントは通信失敗時に panic するため、recover してエラーとして返す。
-func fetchPluginSummary(pluginAction action.GetVersionsPluginAction) (pluginVersion string, shortDescription string, err error) {
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			err = fmt.Errorf("%v", recovered)
-		}
-	}()
-	pluginVersion = pluginAction.Version()
-	shortDescription = pluginAction.Short()
-	return pluginVersion, shortDescription, nil
+// fetchPluginSummary returns the version and short description used in the list.
+func fetchPluginSummary(pluginAction *action.GetVersionsPluginActionRPC) (string, string, error) {
+	pluginVersion, err := pluginAction.VersionWithError()
+	if err != nil {
+		return "", "", err
+	}
+	shortDescription, err := pluginAction.ShortWithError()
+	return pluginVersion, shortDescription, err
 }
 
 func init() {

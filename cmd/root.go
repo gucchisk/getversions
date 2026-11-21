@@ -186,7 +186,7 @@ func createPluginActionCmd(a PluginAction) (*cobra.Command, error) {
 	return createActionCmd(a.Name, action), nil
 }
 
-func getGetVersionAction(a PluginAction) (action.GetVersionsPluginAction, error) {
+func getGetVersionAction(a PluginAction) (*action.GetVersionsPluginActionRPC, error) {
 	rpcClient, err := a.Client.Client()
 	if err != nil {
 		logger.V(2).Info("Client error", "error", err)
@@ -201,5 +201,5 @@ func getGetVersionAction(a PluginAction) (action.GetVersionsPluginAction, error)
 		fmt.Printf("error: %x\n", err)
 		return nil, err
 	}
-	return raw.(action.GetVersionsPluginAction), nil
+	return raw.(*action.GetVersionsPluginActionRPC), nil
 }

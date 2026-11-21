@@ -28,21 +28,33 @@ type GetVersionsPluginActionRPC struct {
 }
 
 func (g *GetVersionsPluginActionRPC) Version() string {
-	var resp string
-	err := g.client.Call("Plugin.Version", struct{}{}, &resp)
+	resp, err := g.VersionWithError()
 	if err != nil {
 		panic(err)
 	}
 	return resp
 }
 
-func (g *GetVersionsPluginActionRPC) Short() string {
+// VersionWithError returns the plugin version and any RPC error.
+func (g *GetVersionsPluginActionRPC) VersionWithError() (string, error) {
 	var resp string
-	err := g.client.Call("Plugin.Short", struct{}{}, &resp)
+	err := g.client.Call("Plugin.Version", struct{}{}, &resp)
+	return resp, err
+}
+
+func (g *GetVersionsPluginActionRPC) Short() string {
+	resp, err := g.ShortWithError()
 	if err != nil {
 		panic(err)
 	}
 	return resp
+}
+
+// ShortWithError returns the short description and any RPC error.
+func (g *GetVersionsPluginActionRPC) ShortWithError() (string, error) {
+	var resp string
+	err := g.client.Call("Plugin.Short", struct{}{}, &resp)
+	return resp, err
 }
 
 func (g *GetVersionsPluginActionRPC) Long() string {
