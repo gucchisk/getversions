@@ -1,7 +1,6 @@
 package versions
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gucchisk/getversions/pkg/utils/version"
@@ -41,13 +40,10 @@ func getOrigins(versions []Version) []string {
 	return origins
 }
 
-func getOrigin(versions []Version, semver string) (string, error) {
-	for _, ver := range versions {
-		if ver.semver == semver {
-			return ver.origin, nil
-		}
-	}
-	return "", fmt.Errorf("version not found: %s", semver)
+// matchesCondition はバージョンが条件に一致するかを、バージョンの区切り(".")単位で判定する。
+// 例: 条件 "v1.2" は "v1.2" や "v1.2.3" に一致するが、"v1.20.0" には一致しない。
+func matchesCondition(semver string, condition string) bool {
+	return semver == condition || strings.HasPrefix(semver, condition+".")
 }
 
 func (v *Versions) Filter(condition string) *Versions {
@@ -65,27 +61,22 @@ func (v *Versions) OnlyLatest() *Versions {
 
 func (v *Versions) Get() []string {
 	if v.onlyLatest {
-		latest := "v0.0.0"
-		compareFunc := func(cv Version) {
-			if version.IsBig(cv.semver, latest) {
-				latest = cv.semver
+		// v0.0.0 以下のバージョンは最新の候補にしない
+		latest := Version{origin: "", semver: "v0.0.0"}
+		found := false
+		for _, candidate := range v.versions {
+			if v.condition != "" && !matchesCondition(candidate.semver, v.condition) {
+				continue
+			}
+			if version.IsBig(candidate.semver, latest.semver) {
+				latest = candidate
+				found = true
 			}
 		}
-
-		for _, ver := range v.versions {
-			if v.condition != "" {
-				if strings.HasPrefix(ver.semver, v.condition) {
-					compareFunc(ver)
-				}
-			} else {
-				compareFunc(ver)
-			}
+		if !found {
+			return []string{}
 		}
-		if latest != "v0.0.0" {
-			orig, _ := getOrigin(v.versions, latest)
-			return []string{orig}
-		}
-		return []string{}
+		return []string{latest.origin}
 	}
 
 	if v.condition == "" {
@@ -94,7 +85,7 @@ func (v *Versions) Get() []string {
 
 	filtered := []Version{}
 	for _, ver := range v.versions {
-		if strings.HasPrefix(ver.semver, v.condition) {
+		if matchesCondition(ver.semver, v.condition) {
 			filtered = append(filtered, ver)
 		}
 	}
