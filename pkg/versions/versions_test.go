@@ -98,6 +98,19 @@ func TestGet(t *testing.T) {
 			expectedVersions: []string{"1.2.0", "1.2.3"},
 		},
 		{
+			name:             "条件がパッチバージョンまでなら完全一致するバージョンのみ返す",
+			inputVersions:    inputVersions,
+			condition:        "1.2.3",
+			expectedVersions: []string{"1.2.3"},
+		},
+		{
+			name:             "最新のみでマイナーバージョンまでの条件では前方一致する別マイナーバージョンを選ばない",
+			inputVersions:    inputVersions,
+			condition:        "1.2",
+			onlyLatest:       true,
+			expectedVersions: []string{"1.2.3"},
+		},
+		{
 			name:             "vプレフィックス付きの条件でもフィルタできる",
 			inputVersions:    inputVersions,
 			condition:        "v2",
