@@ -132,11 +132,13 @@ func addPluginCommands(hcLogger hclog.Logger) {
 
 func createActionCmd(name string, a pluginapi.GetVersionsAction) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   name,
+		Use:   name + " <url>",
 		Short: a.Short(),
 		Long:  a.Long(),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := http.Get(args[0])
+			targetURL := args[0]
+			resp, err := http.Get(targetURL)
 			if err != nil {
 				return err
 			}
