@@ -1,4 +1,5 @@
-package action
+// Package pluginapi は getversions 本体とプラグイン間の RPC インターフェイスを定義する。
+package pluginapi
 
 import (
 	"bytes"
@@ -8,6 +9,14 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/pflag"
 )
+
+// HandshakeConfig はホストとプラグイン間で共有するハンドシェイク設定。
+// ホストとプラグインで値が一致しない場合、プラグインは起動を拒否される。
+var HandshakeConfig = plugin.HandshakeConfig{
+	ProtocolVersion:  1,
+	MagicCookieKey:   "GETVERSIONS_PLUGIN",
+	MagicCookieValue: "hello",
+}
 
 type GetVersionsAction interface {
 	Short() string

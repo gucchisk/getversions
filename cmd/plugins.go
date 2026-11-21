@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/gucchisk/getversions/pkg/action"
+	"github.com/gucchisk/getversions/pluginapi"
 	"github.com/spf13/cobra"
 )
 
@@ -47,7 +47,7 @@ var pluginsCmd = &cobra.Command{
 
 // fetchPluginSummary は プラグインのバージョンと短い説明を取得する。
 // RPCクライアントは通信失敗時に panic するため、recover してエラーとして返す。
-func fetchPluginSummary(pluginAction action.GetVersionsPluginAction) (pluginVersion string, shortDescription string, err error) {
+func fetchPluginSummary(pluginAction pluginapi.GetVersionsPluginAction) (pluginVersion string, shortDescription string, err error) {
 	defer func() {
 		if recovered := recover(); recovered != nil {
 			err = fmt.Errorf("%v", recovered)

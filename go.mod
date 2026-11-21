@@ -6,6 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/zapr v1.3.0
+	github.com/gucchisk/getversions/pluginapi v0.0.0-20261121094544-998adaa2e490
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-plugin v1.6.1
 	github.com/spf13/cobra v1.6.1

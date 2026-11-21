@@ -8,7 +8,7 @@ tasks:
     sources:
       - main.go
       - cmd/*.go
-      - pkg/action/*.go
+      - pluginapi/*.go
       - pkg/utils/*.go
       - pkg/utils/htmlparser/*.go
       - pkg/utils/version/*.go
@@ -20,6 +20,7 @@ tasks:
       - go build -o {{.binary}}-gradle actions/gradle/main.go
     sources:
       - actions/gradle/main.go
+      - pluginapi/*.go
     generates:
       - ./{{.binary}}-gradle
   test:

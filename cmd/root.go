@@ -14,10 +14,9 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
-	"github.com/gucchisk/getversions/pkg/action"
-	act "github.com/gucchisk/getversions/pkg/action"
 	"github.com/gucchisk/getversions/pkg/utils"
 	vers "github.com/gucchisk/getversions/pkg/versions"
+	"github.com/gucchisk/getversions/pluginapi"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
@@ -97,12 +96,6 @@ func Execute(level int) {
 func init() {
 }
 
-var handshakeConfig = plugin.HandshakeConfig{
-	ProtocolVersion:  1,
-	MagicCookieKey:   "GETVERSIONS_PLUGIN",
-	MagicCookieValue: "hello",
-}
-
 var actions []PluginAction
 
 type PluginAction struct {
@@ -119,9 +112,9 @@ func addPluginCommands(hcLogger hclog.Logger) {
 	plugins := utils.SearchPlugins()
 	for _, p := range plugins {
 		name := strings.Split(filepath.Base(p), "-")[1]
-		pluginMap[name] = &act.GetVersionsPlugin{}
+		pluginMap[name] = &pluginapi.GetVersionsPlugin{}
 		client := plugin.NewClient(&plugin.ClientConfig{
-			HandshakeConfig: handshakeConfig,
+			HandshakeConfig: pluginapi.HandshakeConfig,
 			Plugins:         pluginMap,
 			Cmd:             exec.Command(p),
 			Logger:          hcLogger,
@@ -137,13 +130,15 @@ func addPluginCommands(hcLogger hclog.Logger) {
 	}
 }
 
-func createActionCmd(name string, a act.GetVersionsAction) *cobra.Command {
+func createActionCmd(name string, a pluginapi.GetVersionsAction) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   name,
+		Use:   name + " <url>",
 		Short: a.Short(),
 		Long:  a.Long(),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := http.Get(args[0])
+			targetURL := args[0]
+			resp, err := http.Get(targetURL)
 			if err != nil {
 				return err
 			}
@@ -186,7 +181,7 @@ func createPluginActionCmd(a PluginAction) (*cobra.Command, error) {
 	return createActionCmd(a.Name, action), nil
 }
 
-func getGetVersionAction(a PluginAction) (action.GetVersionsPluginAction, error) {
+func getGetVersionAction(a PluginAction) (pluginapi.GetVersionsPluginAction, error) {
 	rpcClient, err := a.Client.Client()
 	if err != nil {
 		logger.V(2).Info("Client error", "error", err)
@@ -201,5 +196,5 @@ func getGetVersionAction(a PluginAction) (action.GetVersionsPluginAction, error)
 		fmt.Printf("error: %x\n", err)
 		return nil, err
 	}
-	return raw.(action.GetVersionsPluginAction), nil
+	return raw.(pluginapi.GetVersionsPluginAction), nil
 }
