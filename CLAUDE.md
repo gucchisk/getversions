@@ -40,7 +40,7 @@ go test ./pkg/latest/apache
 このアプリケーションは、RPCベースのプラグイン用にHashiCorp's go-pluginフレームワークを使用しています：
 
 **主要コンポーネント:**
-- `pluginapi/pluginapi.go` - プラグインインターフェース・RPCレイヤー・ハンドシェイク設定を定義（独立モジュール `github.com/gucchisk/getversions/pluginapi`。本体からは `go.mod` の `replace` で参照）
+- `pluginapi/pluginapi.go` - プラグインインターフェース・RPCレイヤー・ハンドシェイク設定を定義（独立モジュール `github.com/gucchisk/getversions/pluginapi`。ローカル開発時は `go.work` で参照）
 - `actions/*/main.go` - プラグインの実装
 - `cmd/root.go` - プラグインの検出とコマンド登録
 
